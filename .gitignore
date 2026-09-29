@@ -5,3 +5,4 @@ models/
 *.gguf
 *.part
 test-results.json
+reports/
