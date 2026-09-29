@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.venv/
+models/
+*.gguf
+*.part
+test-results.json

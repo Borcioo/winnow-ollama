@@ -1,0 +1,28 @@
+{
+  "state": "You charged my subscription twice. Please refund the duplicate payment.",
+  "questions": {
+    "department": {
+      "type": "choice",
+      "instructions": "Which team should handle this ticket?",
+      "criteria": {
+        "billing": "Payments, invoices and refunds",
+        "technical": "Software bugs and outages",
+        "sales": "Quotes and purchases",
+        "account": "Login and settings"
+      }
+    },
+    "refund": {
+      "type": "noul",
+      "instructions": "Does the customer request money back?"
+    },
+    "urgency": {
+      "type": "score",
+      "instructions": "How urgent is this ticket?",
+      "criteria": [
+        "Routine question; can wait",
+        "A problem disrupts work",
+        "An outage blocks work; immediate attention"
+      ]
+    }
+  }
+}
