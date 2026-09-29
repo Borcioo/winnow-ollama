@@ -126,6 +126,40 @@ The initial comparison used eight synthetic tickets (seven Polish, one English),
 
 Reproduce the eight-ticket evaluation with `python scripts/evaluate.py`. It reads `examples/evaluation.json` and writes a local, gitignored `test-results.json`. This test requires the default `winnow-e4b` model name. The fixtures intentionally contain Polish text to exercise multilingual behavior; documentation and code are English.
 
+## Visual consistency experiments
+
+Run 35 synthetic scenarios, 20 repeats each (700 decisions):
+
+```sh
+python scripts/visual_tests.py --require-gpu --repeats 20
+```
+
+Open `reports/consistency.html` in a browser. This self-contained English report works offline and includes a trolley diagram, risk curves, per-variant comparisons, individual trials and JSON download. It is a saved snapshot; opening it does not run inference. Both generated HTML and raw JSON stay in the gitignored `reports/` directory.
+
+- **Trolley:** paraphrase, option reversal, Polish state and changed casualty counts. No moral answer is labeled correct.
+- **Risk:** nine probabilities, each asked with no rule and with an explicit expected-loss rule. Matched policy pairs show the effect of adding that rule; changed facts are not treated as inconsistency. Equal expected losses are unscored.
+- **Intent:** refund requests, negation, paraphrases, reversed options, Polish states and one embedded instruction.
+
+Use `--suite trolley`, `--suite risk` or `--suite intent` for a subset. `--model`, `--url` and `--output` are configurable. Re-render saved results without a running model:
+
+```sh
+python scripts/visual_tests.py --render reports/consistency.json
+```
+
+Each round shuffles scenario order using a fixed scheduling seed. Calls are stateless, with the adapter's fixed token seed and deterministic argmax decision. Repeating the same input measures stability under this setup, **not 20 independent accuracy observations**. Summaries separate failed requests, successful-trial accuracy, repeat agreement and adjacent flip rate. Probability ranges are descriptive, not confidence intervals; option probabilities are not established real-world correctness probabilities. Language variants translate the state only, leaving the question and labels in English.
+
+The recorded run is included as `examples/consistency-results.json`. To view it without installing Ollama, run `python scripts/visual_tests.py --render examples/consistency-results.json`, then open the generated HTML.
+
+### Observed run, 2026-09-30
+
+On the same RX 7900 XTX / Vulkan / Ollama 0.34.4 setup: **700 successes, zero request errors**, all 35 variants had 100% repeat agreement. Warm single-decision median was **91.2 ms**, p95 **120.4 ms**, excluding initial warmup and including HTTP. GPU residency was confirmed before and after the run.
+
+Despite perfect repeat agreement, **5 of 18 labeled variants failed**: the Polish refund request and all four expected-loss cases below 20% risk. Each failure repeated 20/20 times. The English refund baseline selected refund; its Polish counterpart selected no refund with P(refund) about 0.453. The model always preferred the certain loss of 20 units, even when the explicit rule required choosing expected losses of 5, 10, 15 or 19 units. This is an instruction-following failure on these fixtures, not evidence that risk aversion itself is incorrect.
+
+The trolley paraphrase changed P(switch) by about **35.7 percentage points** without changing the selected action. These small synthetic experiments expose sensitivity; they do not establish general model quality, moral correctness, language accuracy or production safety. A single embedded-instruction example also cannot establish injection resistance.
+
+New runs capture source hashes, fixture hash, Git HEAD and dirty status. The original run predated runner/source-hash capture; its JSON explicitly marks that provenance limitation. Its model responses are preserved, and added policy comparisons are calculated offline. Automated metric and escaping tests pass; browser UI verification was blocked by the execution environment's local-file URL policy.
+
 ## Model identity and licensing
 
 - [EldanRing/Winnow-E4B](https://huggingface.co/EldanRing/Winnow-E4B)
